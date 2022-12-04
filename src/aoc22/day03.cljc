@@ -29,6 +29,19 @@
        halves (split-at (/ len 2) chars)]
     (str (some (set (first halves)) (last halves)))))
 
+(defn overlapping-item
+  "takes a group of 3 bags, finds the item that overlaps"
+  [x]
+  (->>
+   x
+   (map char-array)
+   (map set)
+   (apply clojure.set/intersection)
+   first
+   str
+   ))
+
+
 (defn part-1
   "Run with bb -x aoc22.day03/part-1"
   [_]
@@ -42,10 +55,8 @@
   "Run with bb -x aoc22.day02/part-2"
   [_]
   (->> input
-       (partition-by nil?)
-       (take-nth 2)
-       (map #(apply + %))
-       (sort-by -)
-       (take 3)
-       (apply +)
+       (partition 3)
+       (map overlapping-item)
+       (map letters)
+       (reduce +)
        prn))
