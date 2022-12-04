@@ -1,7 +1,7 @@
 (ns aoc22.day03
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
-            ))
+            [clojure.set :as cjs]))
 
 (def fl_val (- (int (.charAt "a" 0)) 1))
 
@@ -36,7 +36,7 @@
    x
    (map char-array)
    (map set)
-   (apply clojure.set/intersection)
+   (apply cjs/intersection)
    first
    str
    ))
