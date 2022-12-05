@@ -13,12 +13,9 @@
     (set rng)))
 
 (defn lines-to-sets
-  "prepping for doomsday"
   [l]
-  (->> l
-       ((fn [s] (str/split s #",")))
-       (map string-to-set)
-   ))
+  (->> (str/split l #",")
+       (map string-to-set)))
 
 ;; new line delim'd text, blank spaces denote different
 ;; elves
