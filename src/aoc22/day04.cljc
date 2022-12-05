@@ -32,23 +32,25 @@
   [a b]
   (or (cset/subset? a b) (cset/subset? b a)))
 
+(defn partially-contains?
+  "input is two sets, determines if one set intersects with the other"
+  [a b]
+  (let [i (cset/intersection a b)
+        c (count i)]
+    (if (> c 0) c)))
 
 (defn part-1
   "Run with bb -x aoc22.day04/part-1"
   [_]
   (->> input
        (map #(apply fully-contains? %))
-       (keep #(if (true? %) %)) ; keep those that are true
+       (keep #(if (true? %) %))
        count))
 
 (defn part-2
   "Run with bb -x aoc22.day02/part-2"
   [_]
   (->> input
-       (partition-by nil?)
-       (take-nth 2)
-       (map #(apply + %))
-       (sort-by -)
-       (take 3)
-       (apply +)
-       prn))
+       (map #(apply partially-contains? %))
+       (keep identity)
+       count))
