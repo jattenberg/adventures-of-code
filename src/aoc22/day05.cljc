@@ -1,4 +1,4 @@
-(ns aoc22.day05
+=(ns aoc22.day05
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             ))
@@ -14,13 +14,15 @@
 (defn swap-cargo
   "takes the last exntry of from and puts it on top of to"
   [c from to]
-  (let [fromc (get c from)
-        last (last fromc)
-        fromcn (drop-last fromc)
-        toc (get c to)
-        tocn (conj* toc last)
-        with-tocn (assoc c to tocn)]
-    (assoc with-tocn from fromcn)))
+  (if (empty? (get c from))
+    c
+    (let [fromc (get c from)
+          last (last fromc)
+          fromcn (drop-last fromc)
+          toc (get c to)
+          tocn (conj* toc last)
+          with-tocn (assoc c to tocn)]
+      (assoc with-tocn from fromcn))))
 
 (defn one-instruction
   "swaps the cargo according to one instruction"
@@ -32,6 +34,23 @@
     (if (> ct 1)
       (one-instruction swapped [(dec ct) from to])
       swapped)))
+
+(defn one-instruction-multi
+  "swaps the cargo according to one instruction"
+  [c, i]
+  (let [ct (first i)
+        from (second i)
+        to (last i)
+        fromc (get c from)
+        toc (get c to)
+        to-get (->> (reverse fromc)
+                    (take ct)
+                    (reverse))
+        fromcn (->> (reverse fromc)
+                    (#(nthrest % ct))
+                    (reverse))
+        tocn (concat toc to-get)]
+    (assoc (assoc c to tocn) from fromcn)))
 
 (defn transpose
   "takes a seq of seqs and transposes it"
@@ -103,17 +122,15 @@
         cargo (parse-cargo (first stanzas))
         instrs (parse-inst (last stanzas))]
     (->> (reduce one-instruction cargo instrs)
-         (map first)
-         (str/join)))
+         (map last)
+         (str/join))))
 
 (defn part-2
   "Run with bb -x aoc22.day02/part-2"
   [_]
-  (->> 
-       (partition-by nil?)
-       (take-nth 2)
-       (map #(apply + %))
-       (sort-by -)
-       (take 3)
-       (apply +)
-       prn))
+    (let [stanzas (partition-by str/blank? input)
+        cargo (parse-cargo (first stanzas))
+        instrs (parse-inst (last stanzas))]
+    (->> (reduce one-instruction-multi cargo instrs)
+         (map last)
+         (str/join))))
