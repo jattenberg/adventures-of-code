@@ -1,13 +1,12 @@
 (ns aoc22.day01
   (:require [clojure.java.io :as io]
-            [clojure.string :as str]
-            ))
+            [clojure.string :as str]))
 
 ;; new line delim'd text, blank spaces denote different
 ;; elves
 (def input (->> (slurp (io/resource "aoc22/day01.txt"))
-                   (str/split-lines)
-                   (map parse-long)))
+                (str/split-lines)
+                (map parse-long)))
 
 (defn part-1
   "Run with bb -x aoc22.day01/part-1"

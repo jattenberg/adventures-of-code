@@ -1,11 +1,10 @@
-=(ns aoc22.day05
+(ns aoc22.day05
   (:require [clojure.java.io :as io]
-            [clojure.string :as str]
-            ))
+            [clojure.string :as str]))
 
 (def input (->> (io/resource "aoc22/day05.txt")
-       (slurp)
-       (str/split-lines)))
+                (slurp)
+                (str/split-lines)))
 
 (defn conj*
   [s x]
@@ -99,8 +98,8 @@
   "decrements the indices of the instructions"
   [i]
   [(first i)
-    (dec (second i))
-    (dec (last i))])
+   (dec (second i))
+   (dec (last i))])
 
 ;  "move 29 from 4 to 9"
 ;  "move 15 from 9 to 7"
@@ -128,7 +127,7 @@
 (defn part-2
   "Run with bb -x aoc22.day02/part-2"
   [_]
-    (let [stanzas (partition-by str/blank? input)
+  (let [stanzas (partition-by str/blank? input)
         cargo (parse-cargo (first stanzas))
         instrs (parse-inst (last stanzas))]
     (->> (reduce one-instruction-multi cargo instrs)

@@ -18,15 +18,15 @@
        (into (hash-map))))
 
 (def input (->> (slurp (io/resource "aoc22/day03.txt"))
-                   (str/split-lines)))
+                (str/split-lines)))
 
 (defn item-appearing-twice
   "takes the contents of a rucksack, finds the item that appears twice"
   [r]
   (let
-      [chars (char-array r)
-       len (count chars)
-       halves (split-at (/ len 2) chars)]
+   [chars (char-array r)
+    len (count chars)
+    halves (split-at (/ len 2) chars)]
     (str (some (set (first halves)) (last halves)))))
 
 (defn overlapping-item
@@ -38,9 +38,7 @@
    (map set)
    (apply cjs/intersection)
    first
-   str
-   ))
-
+   str))
 
 (defn part-1
   "Run with bb -x aoc22.day03/part-1"

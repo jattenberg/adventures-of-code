@@ -1,8 +1,7 @@
 (ns aoc22.day04
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
-            [clojure.set :as cset]
-            ))
+            [clojure.set :as cset]))
 
 (defn string-to-set
   "takes a string like \\d+-\\d+, and turns it into a set of ints"
@@ -21,8 +20,7 @@
 ;; elves
 (def input (->> (slurp (io/resource "aoc22/day04.txt"))
                 (str/split-lines)
-                (map lines-to-sets)
-                ))
+                (map lines-to-sets)))
 
 (defn fully-contains?
   "input is two sets. determines if one set is a proper subset of the other"
