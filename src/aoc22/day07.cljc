@@ -72,27 +72,44 @@
                             path)
          :else (parse-tree rest tree path))))))
 
+(defn walk
+  [tree]
+  (mapcat (fn [e]
+            (let [k (first e)
+                  v (last e)]
+              (if (map? v) (walk v) [v])))
+          tree))
+
 (defn part-1
   "Run with bb -x aoc22.day07/part-1"
   [_]
-  (let [input (->> (io/resource "aoc22/day07.txt")
+  (let [sz 100000
+        input (->> (io/resource "aoc22/day07.txt")
                    slurp
                    (str/trim)
                    (str/split-lines)
                    (map str/trim)
                    (remove empty?))
         tree (parse-tree input)]
-    ;(println (json/write-str tree))
-    tree))
+    (->> (walk tree)
+         (filter #(<= % sz))
+         (reduce +))))
 
 (defn part-2
-  "Run with bb -x aoc22.day02/part-2"
+  "Run with bb -x aoc22.day07/part-2"
   [_]
-  (->> input
-       (partition-by nil?)
-       (take-nth 2)
-       (map #(apply + %))
-       (sort-by -)
-       (take 3)
-       (apply +)
-       prn))
+  (let [fs 70000000
+        min-need 30000000
+        input (->> (io/resource "aoc22/day07.txt")
+                   slurp
+                   (str/trim)
+                   (str/split-lines)
+                   (map str/trim)
+                   (remove empty?))
+        tree (parse-tree input)
+        sizes (->> (walk tree)
+                   sort)
+        used (last sizes)
+        remaining (- fs used)
+        needed (- min-need remaining)]
+    (first (filter #(>= % needed) sizes))))
