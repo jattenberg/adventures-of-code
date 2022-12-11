@@ -1,35 +1,19 @@
 (ns aoc22.day08
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
-            [clojure.set :as cset]
+            [utils :as utils]
             [clojure.math.combinatorics :as combo]))
-
-(defn take-until
-  "Returns a lazy sequence of successive items from coll until
-   (pred item) returns true, including that item. pred must be
-   free of side-effects."
-  [pred coll]
-  (lazy-seq
-   (when-let [s (seq coll)]
-     (if (pred (first s))
-       (cons (first s) nil)
-       (cons (first s) (take-until pred (rest s)))))))
 
 (defn coords
   [nrows ncols]
   (combo/cartesian-product (range nrows) (range ncols)))
-
-(defn transpose
-  "takes a seq of seqs and transposes it"
-  [x]
-  (apply mapv vector x))
 
 (defn forest-data
   [trees coords]
   (let [rown (first coords)
         coln (second coords)
         row (nth trees rown)
-        col (nth (transpose trees) coln)
+        col (nth (utils/transpose trees) coln)
         srow (split-at coln row)
         scol (split-at rown col)
         height (nth row coln)
@@ -47,7 +31,7 @@
 ; To measure the viewing distance from a given tree, look up, down, left, and right from that tree; stop if you reach an edge or at the first tree that is the same height or taller than the tree under consideration. (If a tree is right on the edge, at least one of its viewing distances will be zero.)
 (defn direction-visibility
   [height view]
-  (take-until #(>= % height) view))
+  (utils/take-until #(>= % height) view))
 
 (defn visibility-score
   [frst-data]
@@ -77,26 +61,10 @@
   [matrix]
   (reduce + (map #(count (set %)) matrix)))
 
-(defn rotations
-  [matrix]
-  [matrix
-   (transpose matrix)
-   (map reverse matrix)
-   (map reverse (transpose matrix))])
-
-(defn invert-rotations
-  [matricies]
-  [(nth matricies 0)
-   (transpose (nth matricies 1))
-   (map reverse (nth matricies 2))
-   (transpose (map reverse (nth matricies 3)))])
 
 (defn parse-visible
   [matrix]
   (map (fn [r] (map second r)) matrix))
-
-(defn zip [& colls]
-  (partition (count colls) (apply interleave colls)))
 
 (defn is-vis
   [zipped]
@@ -107,7 +75,7 @@
   ([matricies] (visible-trees (first matricies) (rest matricies)))
   ([acc matricies]
    (let [side (first matricies)
-         zipped (map zip acc side)
+         zipped (map utils/zip acc side)
          vis (is-vis zipped)]
      (if (= 1 (count matricies))
        vis
@@ -127,9 +95,9 @@
                    str/split-lines
                    (map parse-row)
                    vec)
-        rots (rotations trees)
+        rots (utils/rotations trees)
         viss (map visible-on-side rots)
-        unrot (invert-rotations viss)
+        unrot (utils/invert-rotations viss)
         bool-vis (map parse-visible unrot)
         visible-map (visible-trees bool-vis)]
     (count (filter identity (flatten visible-map)))))
