@@ -16,6 +16,13 @@
        (cons (first s) nil)
        (cons (first s) (take-until pred (rest s)))))))
 
+(defn reverse-cols
+  "in a 2d array, reverses the column order"
+  [x]
+  (->> (map reverse x)
+       (map #(into [] %))
+       vec))
+
 (defn transpose
   "takes a seq of seqs and transposes it"
   [x]
@@ -27,6 +34,20 @@
    (transpose matrix)
    (map reverse matrix)
    (map reverse (transpose matrix))])
+
+(defn in?
+  "true if coll contains elm"
+  [coll elm]
+  (some #(= elm %) coll))
+
+(defn find-match-in-2d-array
+  "returns the index of a 2d array where the condition of the fn
+  `matcher` is satisfied"
+  [input matcher]
+  (for [[x row] (map-indexed vector input)
+        [y val] (map-indexed vector row)
+      :when (matcher val)]
+    [x y]))
 
 (defn invert-rotations
   [matricies]
