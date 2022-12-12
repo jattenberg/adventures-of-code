@@ -4,6 +4,10 @@
             [utils :as utils]
             [clojure.core.match :as match]))
 
+(def num-knots (- 10 1))
+(def knot-symbols (mapv #(symbol (str (inc %))) (range num-knots)))
+(def other-symbols [:H :V])
+
 (defn find-position-of-symbol
   [sym pos]
   (first (utils/find-match-in-2d-array pos #(utils/in? % sym))))
@@ -31,6 +35,37 @@
         new-h-pos (add-symbols clean-contents [sym] new-loc)]
     new-h-pos))
 
+(defn maybe-expand-map
+  [pos new-loc]
+  (let [shape (utils/mat-shape pos)
+        new-col (second new-loc)]
+    (if (>= new-col (second shape))
+      (add-col pos)
+      pos)))
+
+(defn maybe-update-knots
+  "assume knot denoted by sym-a has moved, does sym-b need to follow?"
+  [pos sym-pairs]
+  (let [[sym-a sym-b] (first sym-pairs)
+        a-loc (find-position-of-symbol sym-a pos)
+        b-loc (find-position-of-symbol sym-b pos)
+        ttt (println (str a-loc " "  b-loc " " pos))
+        dist (abs (- (second a-loc) (second b-loc)))
+        new-b-loc [(first a-loc) (inc (second b-loc))]
+        _ (println (str sym-a " " sym-b " " "dist: " dist " " (> dist 2) " " (count sym-pairs) " " (utils/mat-shape pos)))
+        new-pos (if (> dist 2) (move-sym pos sym-b b-loc new-b-loc) pos)
+        visit-update (if (and (> dist 2) (= (count sym-pairs) 1))
+                       (add-symbols new-pos [:V] new-b-loc) new-pos)]
+    (if (= (count sym-pairs) 1)
+      visit-update
+      (recur visit-update (rest sym-pairs)))))
+
+(defn update-knots
+  [pos]
+  (let [syms (concat [:H] knot-symbols)
+        sym-pairs (partition 2 1 syms)]
+    (maybe-update-knots pos sym-pairs)))
+
 (defn step-right
   "moves the :H one step to the right, expanding the map if necessary
   then updates by dragging :T so that it's next to :H, recording :V
@@ -38,21 +73,10 @@
   [pos]
   (let [h-pos (find-position-of-symbol :H pos)
         t-pos (find-position-of-symbol :T pos)
-        cols-ct (count (first pos))
         new-loc [(first h-pos) (inc (second h-pos))]
-        new-pos (if (>= cols-ct (second new-loc))
-                  (add-col pos)
-                  pos)
-        moved-head (move-sym new-pos :H h-pos new-loc)
-        t-dist (- (second new-loc) (second t-pos))]
-    (if (< t-dist 2)
-      moved-head
-      (->> (move-sym
-            moved-head
-            :T
-            t-pos
-            [(first h-pos) (inc (second t-pos))])
-           (#(add-symbols % [:V] [(first h-pos) (inc (second t-pos))]))))))
+        new-pos (maybe-expand-map pos new-loc)
+        moved-head (move-sym new-pos :H h-pos new-loc)]
+    (update-knots moved-head)))
 
 (defn _step-down
   [pos]
@@ -83,15 +107,14 @@
                     ["D"] (_step-down pos)
                     ["L"] (_step-left pos)
                     ["U"] (_step-up pos))]
-      (apply-inst-to-map updated dir (dec x)))))
+      (recur updated dir (dec x)))))
 
 (defn apply-instructions
-  [steps instruction]
+  [pos instruction]
   (let [dir (first instruction)
         x (second instruction)
-        pos (last steps)
         new (apply-inst-to-map pos dir x)]
-    (conj steps new)))
+    new))
 
 (defn parse-instruction
   [ins]
@@ -112,21 +135,19 @@
                           (slurp)
                           (str/split-lines)
                           (map parse-instruction))
-        steps (reduce apply-instructions [start] instructions)]
-    (->> (last steps)
-         (visited)
-         (count))))
+        steps (reduce apply-instructions start instructions)]
+    (println (str "shape: " (utils/mat-shape steps)))
+    (count (visited steps))))
 
 (defn part-2
   "Run with bb -x aoc22.day02/part-2"
   [_]
-  (->> (io/resource "aoc22/day09example.txt")
-       (slurp)
-       (str/split-lines)
-       (partition-by nil?)
-       (take-nth 2)
-       (map #(apply + %))
-       (sort-by -)
-       (take 3)
-       (apply +)
-       prn))
+  (let [start [[(concat other-symbols knot-symbols)]]
+        instructions (->> (io/resource "aoc22/day09example.txt")
+                          (slurp)
+                          (str/split-lines)
+                          (map parse-instruction))
+        steps (reduce apply-instructions start instructions)]
+    (println (str/join "\n" steps))
+    (println (str "shape: " (utils/mat-shape steps)))
+    (count (visited steps))))

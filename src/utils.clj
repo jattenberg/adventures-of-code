@@ -28,6 +28,11 @@
   [x]
   (apply mapv vector x))
 
+(defn mat-shape
+  "returns [nrows ncols] for the input 2d array"
+  [x]
+  [(count x) (count (first x))])
+
 (defn rotations
   [matrix]
   [matrix
