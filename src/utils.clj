@@ -16,6 +16,14 @@
        (cons (first s) nil)
        (cons (first s) (take-until pred (rest s)))))))
 
+(defn vec-
+  [[x1 y1] [x2 y2]]
+  [(- x1 x2) (- y1 y2)])
+
+(defn vec+
+  [[x1 y1] [x2 y2]]
+  [(+ x1 x2) (+ y1 y2)])
+
 (defn reverse-cols
   "in a 2d array, reverses the column order"
   [x]

@@ -27,7 +27,7 @@
 (defn add-col
   "adds a column to the matrix"
   [pos]
-  (vec (map #(conj % []) pos)))
+  (mapv #(conj % []) pos))
 
 (defn move-sym
   [pos sym old-loc new-loc]
@@ -43,22 +43,69 @@
       (add-col pos)
       pos)))
 
+(defn render-cell
+  [c]
+  (if (= (count c) 0)
+    "."
+    (if (utils/in? c :H)
+      "H"
+      (->> (filter #(not= :V %) c)
+           (vec)
+           (#(conj % (if (utils/in? c :V) :V nil)))
+           (keep identity)
+           first))))
+
+(defn render-row
+  [r]
+  (str/join #" " (mapv render-cell r)))
+
+(defn render-map
+  [pos]
+  (doseq [i (mapv render-row pos)] (println i)))
+
+;If the head is ever two steps directly up, down, left, or right from the tail, the tail must also move one step in that direction so it remains close enough
+;Otherwise, if the head and tail aren't touching and aren't in the same row or column, the tail always moves one step diagonally to keep up:
+(defn find-new-knot-loc
+  [a-loc b-loc]
+  (let [dists (utils/vec- a-loc b-loc)
+        abs-dist (->> dists (map abs) (apply max))
+        [dist-x dist-y] dists
+        [b-x b-y] b-loc
+        diff-x          (cond (pos? dist-x) 1
+                              (neg? dist-x) -1
+                              :else         0)
+        diff-y          (cond (pos? dist-y) 1
+                              (neg? dist-y) -1
+                              :else         0)]
+    (if (<= abs-dist 1)
+      b-loc
+      [(+ b-x diff-x) (+ b-y diff-y)])))
+
 (defn maybe-update-knots
   "assume knot denoted by sym-a has moved, does sym-b need to follow?"
   [pos sym-pairs]
-  (let [[sym-a sym-b] (first sym-pairs)
-        a-loc (find-position-of-symbol sym-a pos)
-        b-loc (find-position-of-symbol sym-b pos)
-        ttt (println (str a-loc " "  b-loc " " pos))
-        dist (abs (- (second a-loc) (second b-loc)))
-        new-b-loc [(first a-loc) (inc (second b-loc))]
-        _ (println (str sym-a " " sym-b " " "dist: " dist " " (> dist 2) " " (count sym-pairs) " " (utils/mat-shape pos)))
-        new-pos (if (> dist 2) (move-sym pos sym-b b-loc new-b-loc) pos)
-        visit-update (if (and (> dist 2) (= (count sym-pairs) 1))
-                       (add-symbols new-pos [:V] new-b-loc) new-pos)]
-    (if (= (count sym-pairs) 1)
-      visit-update
-      (recur visit-update (rest sym-pairs)))))
+  (if (= (count sym-pairs) 0)
+    pos ; nothing left to do
+    (let [[sym-a sym-b] (first sym-pairs)
+          is-last-symbol (= (count sym-pairs) 1) ; last set
+          a-loc (find-position-of-symbol sym-a pos) ; just moved
+          b-loc (find-position-of-symbol sym-b pos) ; current loc
+          new-b-loc (find-new-knot-loc a-loc b-loc)
+          need-to-move (not= b-loc new-b-loc)
+          ; what would the pos look like with the symbol moved if needed
+          new-pos (if need-to-move
+                    (move-sym pos sym-b b-loc new-b-loc)
+                    pos)
+          with-visit (if (and is-last-symbol need-to-move)
+                       (add-symbols new-pos [:V] new-b-loc)
+                       new-pos)]
+;      (println (str "after: " sym-a
+;                    " moved to: " a-loc
+;                    " sym " sym-b
+;                    " at: " b-loc
+;                    " (a distance of " dist ")"
+;                    (if need-to-move (str " moves to " new-b-loc) " doesnt move")))
+      (recur with-visit (rest sym-pairs)))))
 
 (defn update-knots
   [pos]
@@ -143,11 +190,11 @@
   "Run with bb -x aoc22.day02/part-2"
   [_]
   (let [start [[(concat other-symbols knot-symbols)]]
-        instructions (->> (io/resource "aoc22/day09example.txt")
+        instructions (->> (io/resource "aoc22/day09.txt")
                           (slurp)
                           (str/split-lines)
                           (map parse-instruction))
         steps (reduce apply-instructions start instructions)]
-    (println (str/join "\n" steps))
+    (println (render-map steps))
     (println (str "shape: " (utils/mat-shape steps)))
     (count (visited steps))))
