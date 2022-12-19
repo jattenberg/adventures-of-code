@@ -16,24 +16,26 @@
 
 (defn letter-dist
   [a b]
-  (let [a-pos (get letter-ind a)
-        b-pos (get letter-ind b)]
+  (let [get-fn (fn [l] (get letter-ind
+                            (cond (= l "S") "a"
+                                  (= l "E") "z"
+                                  :else l)))
+        a-pos (get-fn a)
+        b-pos (get-fn b)]
     (abs (- a-pos b-pos))))
 
 (defn visit-node
-  [map [row col]]
-  (let [this-r (get-in map [row col]) ; todo: do somethign when it's E or S
-        this (cond (= this-r "S") "a"
-                   (= this-r "E") "z"
-                   :else this-r)
+  [pmap [row col]]
+                                        ;(println (str "r " row " c " col))
+  (let [this (get-in pmap [row col]) ; todo: do somethign when it's E or S
         above [(dec row) col]
-        a-val (get-in map above)
+        a-val (get-in pmap above)
         below [(inc row) col]
-        b-val (get-in map below)
+        b-val (get-in pmap below)
         left [row (dec col)]
-        l-val (get-in map left)
+        l-val (get-in pmap left)
         right [row (inc col)]
-        r-val (get-in map right)
+        r-val (get-in pmap right)
         coords [above below left right]
         heights [a-val b-val l-val r-val]]
     (->> (utils/zip coords heights)
@@ -45,21 +47,24 @@
   [map paths seen steps start end end-v])
 
 (defn dfs
-  ([map start end] (dfs map start end [] (set []) []))
-  ([map start end paths seen steps]
-   (let [neighbors (visit-node map start)
-         _ (println neighbors)
+  ([pmap start end] (dfs pmap start end [] (set []) []))
+  ([pmap start end paths seen steps]
+   (let [neighbors (visit-node pmap start)
          new-seen (conj seen start)
-         _ (println new-seen)
          seen-fn (fn [l] (not (contains? new-seen (first l))))
          unvisited (filter seen-fn neighbors)
-         _ (println unvisited)]
-     (if (= 0 (count unvisited))
-       paths ; no more steps to explore, todo also return seen
-       (map (fn [[r c] v]
-              (if (= v "E")
-                (conj paths (conj steps [[r c] v]))
-                (dfs [r c] end paths new-seen (conj steps [[r c] v]))) unvisited))))))
+         options (count unvisited)
+         step-fn (fn [l]
+                   (let [[r c] (first l)
+                         v (second l)
+                         next-steps (conj steps l)]
+                     (if (= v "E")
+                       (conj paths next-steps)
+                       (dfs pmap [r c] end paths new-seen next-steps))))]
+     (println (str unvisited (step-fn (first unvisited))))
+     (if (> options 0)
+       (map step-fn unvisited)
+       []))))
 
 (defn find-path
   ([map start end] (find-path map start end dfs))
