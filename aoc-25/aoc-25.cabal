@@ -1,0 +1,16 @@
+cabal-version: 3.0
+name: aoc25
+version: 0.1.0.0
+synopsis: Advent of Code 2025 solutions in Haskell
+description: Solutions to Advent of Code 2025 puzzles written in Haskell
+license: Unlicense
+author: Josh Attenberg
+maintainer: josh.attenberg@example.com
+build-type: Simple
+
+executable aoc-25
+  main-is: Main.hs
+  hs-source-dirs: src
+  default-language: Haskell2010
+  ghc-options: -Wall
+  build-depends: base >= 4.14 && < 5
